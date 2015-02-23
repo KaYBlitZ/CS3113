@@ -1,5 +1,8 @@
 #include "Player.h"
 
+const float PLAYER_VEL = 0.5f;
+const float SHOOT_TIME = 0.75f;
+
 Player::Player(float x, float y, SheetSprite sprite) : Entity(x, y, sprite), shoot(true), shootTime(0.0f) {}
 
 Player::~Player() {}

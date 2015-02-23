@@ -4,8 +4,8 @@
 #include "SheetSprite.h"
 #include "Entity.h"
 
-const static float PLAYER_VEL = 0.5f;
-const static float SHOOT_TIME = 0.75f;
+extern const float PLAYER_VEL;
+extern const float SHOOT_TIME;
 
 class Player : public Entity{
 public:

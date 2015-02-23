@@ -146,11 +146,14 @@ void SpaceInvaderGame::update() {
 	if (gameState == PLAY_GAME) {
 
 		gameTime += elapsed;
-		if (elapsed > 30.0f) {
-			ENEMY_MOVE_TIME = 1.0f;
+		if (gameTime > 40.0f) {
+			ENEMY_MOVE_X = 1.0f;
 		}
-		else if (elapsed > 45.0f) {
-			ENEMY_MOVE_TIME = 0.5f;
+		else if (gameTime > 30.0f) {
+			ENEMY_MOVE_X = 0.6f;
+		}
+		else if (gameTime > 20.0f) {
+			ENEMY_MOVE_X = 0.2f;
 		}
 
 		if (enemies.size() == 0) gameState = GAME_OVER_WIN;
@@ -192,34 +195,20 @@ void SpaceInvaderGame::shootMissile() {
 }
 
 void SpaceInvaderGame::updateEnemies(float& elapsed) {
-	enemyTime += elapsed;
-	if (enemyTime > ENEMY_MOVE_TIME) {
-		enemyTime -= ENEMY_MOVE_TIME;
+	bool moveDown = false;
 
-		bool moveDown = false;
-		if (isEnemyMoveRight) {
-			for (Enemy*& enemy : enemies) {
-				enemy->move(ENEMY_MOVE_X, 0);
-				if (enemy->getX() > 0.9f) moveDown = true;
-			}
-		}
-		else {
-			for (Enemy*& enemy : enemies) {
-				enemy->move(-ENEMY_MOVE_X, 0);
-				if (enemy->getX() < -0.9f) moveDown = true;
-			}
-		}
-
-		if (moveDown) {
-			isEnemyMoveRight = !isEnemyMoveRight;
-			for (Enemy*& enemy : enemies) {
-				enemy->move(0, -ENEMY_MOVE_Y);
-			}
-		}
-	}
 	for (Enemy*& enemy : enemies) {
-		enemy->update(elapsed, this);
-		if (enemy->getY() < -0.8f) gameState = GAME_OVER_LOSE;
+		enemy->update(elapsed, isEnemyMoveRight, this);
+		if (enemy->getX() > 0.9f || enemy->getX() < -0.9f) moveDown = true;
+	}
+
+	if (moveDown && gameTime - moveDownTime > 1.0f) {
+		moveDownTime = gameTime;
+		isEnemyMoveRight = !isEnemyMoveRight;
+		for (Enemy*& enemy : enemies) {
+			enemy->move(0, -ENEMY_MOVE_Y);
+			if (enemy->getY() < -0.8f) gameState = GAME_OVER_LOSE;
+		}
 	}
 }
 
@@ -330,9 +319,11 @@ void SpaceInvaderGame::initGame() {
 	points = 0;
 	lives = 3;
 	gameTime = 0.0f;
+	moveDownTime = 0.0f;
 }
 
 void SpaceInvaderGame::reset() {
+	moveDownTime = 0.0f;
 	gameTime = 0.0f;
 	lastFrameTicks = 0.0f;
 	points = 0;

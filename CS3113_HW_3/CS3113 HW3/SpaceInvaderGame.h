@@ -54,7 +54,7 @@ private:
 	GameState gameState;
 	int points, lives;
 	GLuint spriteSheet, fontSheet;
-	float lastFrameTicks, enemyTime, gameTime, elapsed;
+	float lastFrameTicks, gameTime, moveDownTime;
 	bool done, isEnemyMoveRight;
 	SDL_Window* displayWindow;
 	const Uint8* keys;

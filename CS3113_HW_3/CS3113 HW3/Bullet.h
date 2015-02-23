@@ -3,7 +3,7 @@
 #include "SheetSprite.h"
 #include "Entity.h"
 
-const static float BULLET_VEL = 1.0f;
+extern const float BULLET_VEL;
 
 enum BulletType {
 	PLAYER,

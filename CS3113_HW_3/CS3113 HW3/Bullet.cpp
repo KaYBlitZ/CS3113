@@ -1,5 +1,7 @@
 #include "Bullet.h"
 
+const float BULLET_VEL = 1.0f;
+
 using namespace std;
 
 Bullet::Bullet(float x, float y, SheetSprite sprite, BulletType type) : Entity(x, y, sprite), type(type) {}
