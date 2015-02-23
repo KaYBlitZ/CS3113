@@ -13,7 +13,8 @@
 enum GameState {
 	MAIN_MENU,
 	PLAY_GAME,
-	GAME_OVER
+	GAME_OVER_LOSE,
+	GAME_OVER_WIN
 };
 
 class Enemy;
@@ -44,7 +45,8 @@ private:
 		std::string text, float x, float y, float scale, float r, float g, float b, float a);
 	
 	void mainMenu();
-	void gameOver();
+	void gameOverLose();
+	void gameOverWin();
 	void game();
 	void initGame();
 	void reset();

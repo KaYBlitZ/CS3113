@@ -124,7 +124,8 @@ void SpaceInvaderGame::handleEvent() {
 					break;
 				case PLAY_GAME:
 					break;
-				case GAME_OVER:
+				case GAME_OVER_LOSE:
+				case GAME_OVER_WIN:
 					gameState = MAIN_MENU;
 					reset();
 					break;
@@ -152,6 +153,8 @@ void SpaceInvaderGame::update() {
 			ENEMY_MOVE_TIME = 0.5f;
 		}
 
+		if (enemies.size() == 0) gameState = GAME_OVER_WIN;
+
 		player->update(elapsed, keys);
 		for (Bullet*& bullet : bullets) {
 			bullet->update(elapsed);
@@ -173,8 +176,11 @@ void SpaceInvaderGame::render() {
 	case PLAY_GAME:
 		game();
 		break;
-	case GAME_OVER:
-		gameOver();
+	case GAME_OVER_LOSE:
+		gameOverLose();
+		break;
+	case GAME_OVER_WIN:
+		gameOverWin();
 		break;
 	}
 	
@@ -213,7 +219,7 @@ void SpaceInvaderGame::updateEnemies(float& elapsed) {
 	}
 	for (Enemy*& enemy : enemies) {
 		enemy->update(elapsed, this);
-		if (enemy->getY() < -0.8f) gameState = GAME_OVER;
+		if (enemy->getY() < -0.8f) gameState = GAME_OVER_LOSE;
 	}
 }
 
@@ -238,7 +244,7 @@ void SpaceInvaderGame::checkCollsions() {
 				bullet->setRemove(true);
 				lives -= 1;
 				if (lives == 0) {
-					gameState = GAME_OVER;
+					gameState = GAME_OVER_LOSE;
 				}
 			}
 			break;
@@ -279,8 +285,15 @@ void SpaceInvaderGame::mainMenu() {
 	drawText("PRESS ENTER TO PLAY", -1.0f, -0.5f, 1.5f);
 }
 
-void SpaceInvaderGame::gameOver() {
+void SpaceInvaderGame::gameOverLose() {
 	drawText("GAME OVER", -0.9f, 0.2f, 3.0f);
+	drawText("MISSION UNSUCCESSFUL", -0.9f, 0.0f, 1.5f);
+	drawText("PRESS ENTER", -0.5f, -0.2f, 1.5f);
+}
+
+void SpaceInvaderGame::gameOverWin() {
+	drawText("GAME OVER", -0.9f, 0.2f, 3.0f);
+	drawText("MISSION SUCCESSFUL", -0.9f, 0.0f, 1.5f);
 	drawText("PRESS ENTER", -0.5f, -0.2f, 1.5f);
 }
 
