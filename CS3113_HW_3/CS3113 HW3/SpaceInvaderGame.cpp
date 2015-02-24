@@ -5,6 +5,9 @@
 
 #include "SpaceInvaderGame.h"
 
+const SDL_Scancode KONAMI_CODE[] = { SDL_SCANCODE_UP, SDL_SCANCODE_UP, SDL_SCANCODE_DOWN, SDL_SCANCODE_DOWN, SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT,
+SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT, SDL_SCANCODE_B, SDL_SCANCODE_A };
+
 using namespace std;
 
 GLuint SpaceInvaderGame::LoadTexture(const char *image_path) {
@@ -75,7 +78,7 @@ void SpaceInvaderGame::drawText(int fontTexture, int rows, int cols,
 	glDrawArrays(GL_QUADS, 0, text.length() * 4);
 }
 
-SpaceInvaderGame::SpaceInvaderGame() : gameState(MAIN_MENU), done(false), displayWindow(nullptr), player(nullptr) {
+SpaceInvaderGame::SpaceInvaderGame() : gameState(MAIN_MENU), done(false), displayWindow(nullptr), player(nullptr), isKonami(false) {
 	init();
 	// load texture once
 	spriteSheet = LoadTexture("sheet.png");
@@ -104,6 +107,7 @@ void SpaceInvaderGame::handleEvent() {
 			done = true;
 		}
 		else if (event.type == SDL_KEYDOWN) {
+			checkKonamiCode(event.key.keysym.scancode);
 			if (event.key.keysym.scancode == SDL_SCANCODE_M) { // shoot missile
 				if (gameState == PLAY_GAME) {
 					if (player->canShoot()) { // check if player can shoot - NO SPAMMING
@@ -132,6 +136,18 @@ void SpaceInvaderGame::handleEvent() {
 				}
 			}
 		}
+	}
+}
+
+void SpaceInvaderGame::checkKonamiCode(SDL_Scancode& key) {
+	if (key == KONAMI_CODE[konamiIndex]) {
+		konamiIndex++;
+	}
+	else {
+		konamiIndex = 0;
+	}
+	if (konamiIndex == 10) {
+		isKonami = true;
 	}
 }
 
@@ -202,12 +218,28 @@ void SpaceInvaderGame::updateEnemies(float& elapsed) {
 		if (enemy->getX() > 0.9f || enemy->getX() < -0.9f) moveDown = true;
 	}
 
-	if (moveDown && gameTime - moveDownTime > 1.0f) {
+	if (moveDown && gameTime - moveDownTime > 0.2f) {
+		moveDowns++;
 		moveDownTime = gameTime;
 		isEnemyMoveRight = !isEnemyMoveRight;
+
+		bool gameOver = false;
 		for (Enemy*& enemy : enemies) {
 			enemy->move(0, -ENEMY_MOVE_Y);
-			if (enemy->getY() < -0.8f) gameState = GAME_OVER_LOSE;
+			if (enemy->getY() < -0.8f) {
+				gameOver = true;
+			}
+		}
+		if (gameOver) {
+			if (!isKonami) {
+				gameState = GAME_OVER_LOSE;
+			}
+			else {
+				for (Enemy*& enemy : enemies) {
+					enemy->move(0, moveDowns * ENEMY_MOVE_Y);
+				}
+				moveDowns = 0;
+			}
 		}
 	}
 }
@@ -231,7 +263,7 @@ void SpaceInvaderGame::checkCollsions() {
 		case ENEMY:
 			if (bullet->isColliding(player)) {
 				bullet->setRemove(true);
-				lives -= 1;
+				if (!isKonami) lives -= 1;
 				if (lives == 0) {
 					gameState = GAME_OVER_LOSE;
 				}
@@ -272,6 +304,7 @@ void SpaceInvaderGame::mainMenu() {
 	drawText("SPACE INVADER", -1.0f, 0.5f, 2.0f);
 	drawText("Kenneth Liang", -1.0f, 0.0f, 2.0f);
 	drawText("PRESS ENTER TO PLAY", -1.0f, -0.5f, 1.5f);
+	if (isKonami) drawText("SECRET ACTIVATED", -1.0f, -1.0f, 1.0f);
 }
 
 void SpaceInvaderGame::gameOverLose() {
@@ -317,12 +350,22 @@ void SpaceInvaderGame::initGame() {
 	lastFrameTicks = 0.0f;
 	isEnemyMoveRight = (true);
 	points = 0;
-	lives = 3;
+	if (isKonami) {
+		lives = 999;
+	}
+	else {
+		lives = 3;
+	}
 	gameTime = 0.0f;
 	moveDownTime = 0.0f;
+	konamiIndex = 0;
+	moveDowns = 0;
 }
 
 void SpaceInvaderGame::reset() {
+	moveDowns = 0;
+	ENEMY_MOVE_X = 0.1f;
+	konamiIndex = 0;
 	moveDownTime = 0.0f;
 	gameTime = 0.0f;
 	lastFrameTicks = 0.0f;

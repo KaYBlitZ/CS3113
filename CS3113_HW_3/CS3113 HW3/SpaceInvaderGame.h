@@ -10,6 +10,8 @@
 #include "Bullet.h"
 #include "Enemy.h"
 
+extern const SDL_Scancode KONAMI_CODE[];
+
 enum GameState {
 	MAIN_MENU,
 	PLAY_GAME,
@@ -39,6 +41,7 @@ private:
 	void updateEnemies(float& elapsed);
 	void checkCollsions();
 	void removeEntities();
+	void checkKonamiCode(SDL_Scancode& code);
 
 	void drawText(std::string text, float x, float y, float size);
 	void drawText(int fontTexture, int rows, int cols,
@@ -52,10 +55,10 @@ private:
 	void reset();
 
 	GameState gameState;
-	int points, lives;
+	int points, lives, konamiIndex, moveDowns;
 	GLuint spriteSheet, fontSheet;
 	float lastFrameTicks, gameTime, moveDownTime;
-	bool done, isEnemyMoveRight;
+	bool done, isEnemyMoveRight, isKonami;
 	SDL_Window* displayWindow;
 	const Uint8* keys;
 	// objects
