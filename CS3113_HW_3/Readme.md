@@ -7,5 +7,6 @@
 - Organize your code!!
 
 # Controls
-Use Z and X to move left and right  
-Use M to shoot missiles
+Press Z and X to move left and right  
+Press M to shoot missiles  
+Press backspace during game to return to main menu

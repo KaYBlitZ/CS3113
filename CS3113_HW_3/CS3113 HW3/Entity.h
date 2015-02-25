@@ -4,7 +4,10 @@
 
 class Entity {
 public:
+	Entity(float x, float y);
 	Entity(float x, float y, SheetSprite sprite);
+
+	Entity& operator=(const Entity& rhs);
 
 	virtual void update(float& elapsed) = 0;
 	void render();

@@ -78,7 +78,7 @@ void SpaceInvaderGame::drawText(int fontTexture, int rows, int cols,
 	glDrawArrays(GL_QUADS, 0, text.length() * 4);
 }
 
-SpaceInvaderGame::SpaceInvaderGame() : gameState(MAIN_MENU), done(false), displayWindow(nullptr), player(nullptr), isKonami(false) {
+SpaceInvaderGame::SpaceInvaderGame() : gameState(MAIN_MENU), done(false), displayWindow(nullptr), isKonami(false) {
 	init();
 	// load texture once
 	spriteSheet = LoadTexture("sheet.png");
@@ -86,7 +86,6 @@ SpaceInvaderGame::SpaceInvaderGame() : gameState(MAIN_MENU), done(false), displa
 }
 
 SpaceInvaderGame::~SpaceInvaderGame() {
-	reset();
 	SDL_Quit();
 }
 
@@ -110,16 +109,19 @@ void SpaceInvaderGame::handleEvent() {
 			checkKonamiCode(event.key.keysym.scancode);
 			if (event.key.keysym.scancode == SDL_SCANCODE_M) { // shoot missile
 				if (gameState == PLAY_GAME) {
-					if (player->canShoot()) { // check if player can shoot - NO SPAMMING
+					if (player.canShoot() || isKonami) { // check if player can shoot - NO SPAMMING unless HAX
 						shootMissile();
-						player->setShoot(false);
+						player.setShoot(false);
 					}
 				}
+			}
+			else if (event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE) {
+				gameState = MAIN_MENU;
 			}
 			else if (event.key.keysym.scancode == SDL_SCANCODE_RETURN) {
 				switch (gameState) {
 				case MAIN_MENU:
-					initGame();
+					resetAndInit();
 					gameState = PLAY_GAME;
 					// below line used to solve weird bug
 					// without it, elapsed time on main menu will get added during start of play,
@@ -131,7 +133,6 @@ void SpaceInvaderGame::handleEvent() {
 				case GAME_OVER_LOSE:
 				case GAME_OVER_WIN:
 					gameState = MAIN_MENU;
-					reset();
 					break;
 				}
 			}
@@ -146,9 +147,7 @@ void SpaceInvaderGame::checkKonamiCode(SDL_Scancode& key) {
 	else {
 		konamiIndex = 0;
 	}
-	if (konamiIndex == 10) {
-		isKonami = true;
-	}
+	if (konamiIndex == 10) isKonami = true; // HAX on
 }
 
 void SpaceInvaderGame::update() {
@@ -174,10 +173,8 @@ void SpaceInvaderGame::update() {
 
 		if (enemies.size() == 0) gameState = GAME_OVER_WIN;
 
-		player->update(elapsed, keys);
-		for (Bullet*& bullet : bullets) {
-			bullet->update(elapsed);
-		}
+		player.update(elapsed, keys);
+		for (Bullet& bullet : bullets) bullet.update(elapsed);
 		updateEnemies(elapsed);
 
 		checkCollsions();
@@ -206,27 +203,24 @@ void SpaceInvaderGame::render() {
 	SDL_GL_SwapWindow(displayWindow);
 }
 
-void SpaceInvaderGame::shootMissile() {
-	bullets.push_back(new Bullet(player->getX(), player->getY(), SheetSprite(spriteSheet, 848 / 1024.f, 684 / 1024.f, 13 / 1024.f, 54 / 1024.f, 2.0f), PLAYER));
-}
-
 void SpaceInvaderGame::updateEnemies(float& elapsed) {
 	bool moveDown = false;
 
-	for (Enemy*& enemy : enemies) {
-		enemy->update(elapsed, isEnemyMoveRight, this);
-		if (enemy->getX() > 0.9f || enemy->getX() < -0.9f) moveDown = true;
+	for (Enemy& enemy : enemies) {
+		enemy.update(elapsed, isEnemyMoveRight, this);
+		if (enemy.getX() > 0.9f || enemy.getX() < -0.9f) moveDown = true;
 	}
 
 	if (moveDown && gameTime - moveDownTime > 0.2f) {
 		moveDowns++;
 		moveDownTime = gameTime;
+
 		isEnemyMoveRight = !isEnemyMoveRight;
 
 		bool gameOver = false;
-		for (Enemy*& enemy : enemies) {
-			enemy->move(0, -ENEMY_MOVE_Y);
-			if (enemy->getY() < -0.8f) {
+		for (Enemy& enemy : enemies) {
+			enemy.move(0, -ENEMY_MOVE_Y);
+			if (enemy.getY() < -0.8f) {
 				gameOver = true;
 			}
 		}
@@ -235,8 +229,8 @@ void SpaceInvaderGame::updateEnemies(float& elapsed) {
 				gameState = GAME_OVER_LOSE;
 			}
 			else {
-				for (Enemy*& enemy : enemies) {
-					enemy->move(0, moveDowns * ENEMY_MOVE_Y);
+				for (Enemy& enemy : enemies) {
+					enemy.move(0, moveDowns * ENEMY_MOVE_Y);
 				}
 				moveDowns = 0;
 			}
@@ -244,25 +238,29 @@ void SpaceInvaderGame::updateEnemies(float& elapsed) {
 	}
 }
 
+void SpaceInvaderGame::shootMissile() {
+	bullets.push_back(Bullet(player.getX(), player.getY(), SheetSprite(spriteSheet, 848 / 1024.f, 684 / 1024.f, 13 / 1024.f, 54 / 1024.f, 2.0f), PLAYER));
+}
+
 void SpaceInvaderGame::shootEnemyBullet(float x, float y) {
-	bullets.push_back(new Bullet(x, y, SheetSprite(spriteSheet, 740 / 1024.0f, 686 / 1024.0f, 37 / 1024.0f, 38 / 1024.0f, 1.0f), ENEMY));
+	bullets.push_back(Bullet(x, y, SheetSprite(spriteSheet, 740 / 1024.0f, 686 / 1024.0f, 37 / 1024.0f, 38 / 1024.0f, 1.0f), ENEMY));
 }
 
 void SpaceInvaderGame::checkCollsions() {
-	for (Bullet*& bullet : bullets) {
-		switch (bullet->getType()) {
+	for (Bullet& bullet : bullets) {
+		switch (bullet.getType()) {
 		case PLAYER:
-			for (Enemy*& enemy : enemies) {
-				if (bullet->isColliding(enemy)) {
-					bullet->setRemove(true);
-					enemy->setRemove(true);
+			for (Enemy& enemy : enemies) {
+				if (bullet.isColliding(&enemy)) {
+					bullet.setRemove(true);
+					enemy.setRemove(true);
 					points += ENEMY_POINTS;
 				}
 			}
 			break;
 		case ENEMY:
-			if (bullet->isColliding(player)) {
-				bullet->setRemove(true);
+			if (bullet.isColliding(&player)) {
+				bullet.setRemove(true);
 				if (!isKonami) lives -= 1;
 				if (lives == 0) {
 					gameState = GAME_OVER_LOSE;
@@ -274,20 +272,18 @@ void SpaceInvaderGame::checkCollsions() {
 }
 
 void SpaceInvaderGame::removeEntities() {
-	vector<Bullet*>::iterator itr = bullets.begin();
+	vector<Bullet>::iterator itr = bullets.begin();
 	while (itr != bullets.end()) {
-		if ((*itr)->canRemove()) {
-			delete *itr;
+		if ((*itr).canRemove()) {
 			itr = bullets.erase(itr);
 		}
 		else {
 			itr++;
 		}
 	}
-	vector<Enemy*>::iterator itr2 = enemies.begin();
+	vector<Enemy>::iterator itr2 = enemies.begin();
 	while (itr2 != enemies.end()) {
-		if ((*itr2)->canRemove()) {
-			delete *itr2;
+		if ((*itr2).canRemove()) {
 			itr2 = enemies.erase(itr2);
 		}
 		else {
@@ -320,20 +316,31 @@ void SpaceInvaderGame::gameOverWin() {
 }
 
 void SpaceInvaderGame::game() {
-	for (Bullet*& bullet : bullets) {
-		bullet->render();
-	}
-	for (Enemy*& enemy : enemies) {
-		enemy->render();
-	}
-	player->render();
+	for (Bullet& bullet : bullets) bullet.render();
+	for (Enemy& enemy : enemies) enemy.render();
+	player.render();
 	drawText("Score: " + to_string(points), -1.0f, 0.85f, 1.5f);
 	drawText("Lives: " + to_string(lives), -1.0f, -1.0f, 1.5f);
 }
 
-void SpaceInvaderGame::initGame() {
-	player = new Player(0.0f, -0.85f, SheetSprite(spriteSheet, 224 / 1024.0f, 832 / 1024.0f, 99 / 1024.0f, 75 / 1024.0f, 2.0f));
+void SpaceInvaderGame::resetAndInit() {
+	player = Player(0.0f, -0.85f, SheetSprite(spriteSheet, 224 / 1024.0f, 832 / 1024.0f, 99 / 1024.0f, 75 / 1024.0f, 2.0f));
 
+	lives = isKonami ? 999 : 3;
+
+	moveDowns = 0;
+	ENEMY_MOVE_X = 0.1f;
+	konamiIndex = 0;
+	moveDownTime = 0.0f;
+	gameTime = 0.0f;
+	lastFrameTicks = 0.0f;
+	points = 0;
+	isEnemyMoveRight = true;
+
+	bullets.clear();
+	enemies.clear();
+
+	//create enemies
 	int cols = 7;
 	int rows = 4;
 	float w = 1.7f / cols;
@@ -343,45 +350,7 @@ void SpaceInvaderGame::initGame() {
 
 	for (int i = 0; i < cols; i++) {
 		for (int j = 0; j < rows; j++) {
-			enemies.push_back(new Enemy(w * i + startX, h * j + startY, SheetSprite(spriteSheet, 425 / 1024.0f, 552 / 1024.0f, 93 / 1024.0f, 84 / 1024.0f, 1.0f)));
+			enemies.push_back(Enemy(w * i + startX, h * j + startY, SheetSprite(spriteSheet, 425 / 1024.0f, 552 / 1024.0f, 93 / 1024.0f, 84 / 1024.0f, 1.0f)));
 		}
-	}
-
-	lastFrameTicks = 0.0f;
-	isEnemyMoveRight = (true);
-	points = 0;
-	if (isKonami) {
-		lives = 999;
-	}
-	else {
-		lives = 3;
-	}
-	gameTime = 0.0f;
-	moveDownTime = 0.0f;
-	konamiIndex = 0;
-	moveDowns = 0;
-}
-
-void SpaceInvaderGame::reset() {
-	moveDowns = 0;
-	ENEMY_MOVE_X = 0.1f;
-	konamiIndex = 0;
-	moveDownTime = 0.0f;
-	gameTime = 0.0f;
-	lastFrameTicks = 0.0f;
-	points = 0;
-	isEnemyMoveRight = true;
-	lives = 3;
-	for (Bullet*& bullet : bullets) {
-		delete bullet;
-	}
-	bullets.clear();
-	for (Enemy*& enemy : enemies) {
-		delete enemy;
-	}
-	enemies.clear();
-	if (player != nullptr) {
-		delete player;
-		player = nullptr;
 	}
 }

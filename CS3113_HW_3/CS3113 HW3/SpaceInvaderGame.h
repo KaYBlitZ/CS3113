@@ -51,8 +51,7 @@ private:
 	void gameOverLose();
 	void gameOverWin();
 	void game();
-	void initGame();
-	void reset();
+	void resetAndInit();
 
 	GameState gameState;
 	int points, lives, konamiIndex, moveDowns;
@@ -62,7 +61,7 @@ private:
 	SDL_Window* displayWindow;
 	const Uint8* keys;
 	// objects
-	Player* player;
-	std::vector<Enemy*> enemies;
-	std::vector<Bullet*> bullets;
+	Player player;
+	std::vector<Enemy> enemies;
+	std::vector<Bullet> bullets;
 };

@@ -5,6 +5,18 @@ SheetSprite::SheetSprite() : textureID(0), u(0), v(0), width(0), height(0) {}
 SheetSprite::SheetSprite(unsigned int textureID, float u, float v, float width, float height, float scale) :
 textureID(textureID), u(u), v(v), width(width), height(height), scale(scale) {}
 
+SheetSprite& SheetSprite::operator=(const SheetSprite& rhs) {
+	if (&rhs != this) {
+		textureID = rhs.textureID;
+		u = rhs.u;
+		v = rhs.v;
+		width = rhs.width;
+		height = rhs.height;
+		scale = rhs.scale;
+	}
+	return *this;
+}
+
 void SheetSprite::draw(float x, float y) {
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, textureID);

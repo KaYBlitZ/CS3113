@@ -9,8 +9,9 @@ extern const float SHOOT_TIME;
 
 class Player : public Entity{
 public:
+	Player();
 	Player(float x, float y, SheetSprite sprite);
-	~Player();
+	Player& operator =(const Player& rhs);
 
 	void update(float& elapsed);
 	void update(float& elapsed, const Uint8* keys);
