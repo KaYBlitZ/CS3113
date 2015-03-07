@@ -130,11 +130,6 @@ void Game::fixedUpdate() {
 		}
 	}
 
-	if (player.y < -1.0f) {
-		player.y = 0.0f;
-		player.x = 0.0f;
-	}
-
 	player.x += player.xVel * FIXED_TIMESTEP;
 	for (Entity*& entity : entities) {
 		if (checkRectCollision(&player, entity)) {
@@ -150,6 +145,13 @@ void Game::fixedUpdate() {
 			}
 			player.xVel = 0.0f;
 		}
+	}
+
+	if (player.x > 1.33f) {
+		player.x = -1.33f;
+	}
+	else if (player.x < -1.33f) {
+		player.x = 1.33f;
 	}
 
 	for (Key& key : keys) {
