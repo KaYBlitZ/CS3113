@@ -18,18 +18,18 @@ SheetSprite& SheetSprite::operator=(const SheetSprite& rhs) {
 	return *this;
 }
 
-void SheetSprite::draw(float x, float y, float width, float height) {
+void SheetSprite::draw(float x, float y) {
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, textureID);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glTranslatef(x, y, 0.0);
+	glTranslatef(x, y, 0.0f);
 
-	float w = width / 2;
-	float h = height / 2;
+	float w = texWidth / 2;
+	float h = texHeight / 2;
 	GLfloat worldQuad[] = { -w * scale, h * scale, -w * scale, -h * scale, w * scale, -h * scale, w * scale, h * scale };
-	GLfloat spriteQuad[] = { u, v, u, v + this->texHeight, u + this->texWidth, v + this->texHeight, u + this->texWidth, v };
+	GLfloat spriteQuad[] = { u, v, u, v + texHeight, u + texWidth, v + texHeight, u + texWidth, v };
 
 	glVertexPointer(2, GL_FLOAT, 0, worldQuad);
 	glEnableClientState(GL_VERTEX_ARRAY);

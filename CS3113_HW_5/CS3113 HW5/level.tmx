@@ -1,47 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" width="100" height="20" tilewidth="20" tileheight="20">
+<map version="1.0" orientation="orthogonal" width="300" height="28" tilewidth="21" tileheight="21">
  <tileset firstgid="1" name="spritesheet" tilewidth="21" tileheight="21" spacing="2" margin="2">
-  <image source="spritesheet.png" width="692" height="370"/>
+  <image source="spritesheet.png" width="692" height="692"/>
  </tileset>
- <layer name="map" width="100" height="20">
+ <layer name="Tile Layer 1" width="300" height="28">
   <data encoding="base64" compression="zlib">
-   eJztlWduwzAMhRWgex2ie50wV8n97LbpOkIZpAEEge+RGrYTID8+1FUocTyK6kIIvdD9/32LiNc0mx7YbdbQenpWH9l3ZC/ypcUU23eJD7RfO0/zi/ykv6Oashy1+qC9mm36bZHWHmmBaoh0QrVkfj11Zb3H9rEeZXGgPEtrxfTz/u5Z89RE6xcrJ3Q/0BnWHUO9hPqI7bP6WKsRyzPnf+/9SevurTO657lns1qxWcJ08PQ708OK14pbq5tXD22fNYtRrXLutHc+W32EZhPLE+Wu6YnyY33m0RL1LetHpLelk/VuIDurB9F+pjHbwzRjM896M5FGrA45mqFeYb2Vvh8aln1pXp75UNPDLF7tm814z8xA/r119uqA9LD8aHl7Zkhuz5fOmtzcvX3BtNM0suIpjZfNuPSb6Vx7X2vOanVubq+X4n1nLJ3j73fhQ1gKn8KX8C38CL9721FsD2YhHApHwrFwIpwKZ8K5cCFcClezaWznYc2UMYxpey3cCLfCnXAvPAiPwpPwLLxEdVlh2b5mnJvabnwg2zFimMp2EdbrFqv8FxFz5z7v2TXn1e7fJjx6pFoMoUlr4rucsi19hPRgsSMtYk1KcrZ81lISsxV7q3tcE3spKPYhfbaidf3j3p+aMbQfSo/W82vqvHaVId6zvR67q8cf9/8Vvw==
+   eJzt2VtugzAQBVC6nCyom0FdfNWPSKhywDbE4yHn4/xUeXl8uXHoY1mWBwAAAAAAIdYJPgPAkXXRV0AOugrIwNkKyEJXAVnoKyALfQVkoa+ALPQVkIH/DQJZ6Cq21oLozwRP8sjW/zy8Mx96kVZywlOpN67ok9ZecsajRBbY5mAvCz09E70u5nLF9170GhirdHZ5pfZ50WtiTi1ZO8qTnL3f91dMRlqz0pK3yHn25n+mNdSuLfrzXLWeM3M4+1rMz74ezyeqF2p79KpejnbVrGT9vuxh/Zx6rq+ax2Y722VlnrnZv76ZHfVJa+/Yh3F7N1NOqPd3r8wc++xlce9vpXnL89h9G5WNT93n2e8bfLqWeZYeY/7j9yry9e94zY3skzvOb3a+L+43/557mi3vPdP5w5kH4ry67n52lJ5/5n33fkP2duGdf4/9AjuytsU=
   </data>
  </layer>
- <objectgroup name="keys" width="0" height="0">
-  <object x="200" y="220" width="20" height="20">
-   <ellipse/>
-  </object>
-  <object x="220" y="220" width="20" height="20">
-   <ellipse/>
-  </object>
-  <object x="240" y="220" width="20" height="20">
-   <ellipse/>
-  </object>
-  <object gid="170" x="640" y="260"/>
-  <object gid="170" x="660" y="260"/>
-  <object gid="170" x="720" y="240"/>
-  <object gid="170" x="740" y="240"/>
-  <object gid="170" x="800" y="220"/>
-  <object gid="170" x="820" y="220"/>
-  <object gid="170" x="880" y="240"/>
-  <object gid="170" x="900" y="240"/>
-  <object gid="170" x="960" y="260"/>
-  <object gid="170" x="980" y="260"/>
-  <object gid="170" x="1400" y="320"/>
-  <object gid="170" x="1420" y="320"/>
-  <object gid="170" x="1480" y="300"/>
-  <object gid="170" x="1500" y="300"/>
-  <object gid="170" x="1560" y="280"/>
-  <object gid="170" x="1580" y="280"/>
-  <object gid="170" x="1640" y="340"/>
-  <object gid="170" x="1660" y="340"/>
-  <object gid="170" x="1720" y="320"/>
-  <object gid="170" x="1740" y="320"/>
-  <object gid="341" x="1960" y="300"/>
-  <object gid="297" x="1960" y="300"/>
- </objectgroup>
- <objectgroup name="flag" width="0" height="0">
-  <object gid="341" x="1960" y="300"/>
- </objectgroup>
 </map>

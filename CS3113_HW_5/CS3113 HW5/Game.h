@@ -25,6 +25,11 @@ public:
 	static const int TILE_SIZE;
 	static const int SPRITE_COUNT_X;
 	static const int SPRITE_COUNT_Y;
+	static const int WIDTH;
+	static const int HEIGHT;
+	static const int SPRITE_MARGIN;
+	static const int SPRITE_SPACING;
+	static const float SCALE;
 
 	Game();
 	virtual ~Game();
@@ -40,6 +45,7 @@ private:
 	void removeEntities();
 	float lerp(float v0, float v1, float t);
 	void loadTiledData();
+	void loadTileMap();
 	bool readHeaderData(std::ifstream& stream);
 	bool readLayerData(std::ifstream& stream);
 	void renderTilemap();
@@ -56,9 +62,10 @@ private:
 
 	Player player;
 	std::vector<Entity*> entities;
+	std::vector<GLfloat> worldQuads, texQuads;
 	const Uint8* keyStates;
 	float lastFrameTicks, timeLeftOver;
-	int numKeys, mapWidth, mapHeight;
+	int numKeys, mapWidth, mapHeight, numTiles;
 	int** levelData; // levelData[y][x]
 	bool done;
 };

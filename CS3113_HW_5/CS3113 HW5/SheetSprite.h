@@ -10,7 +10,7 @@ public:
 
 	SheetSprite& operator=(const SheetSprite& rhs);
 
-	void draw(float x, float y, float width, float height);
+	void draw(float x, float y);
 
 	float u, v, texWidth, texHeight, scale;
 private:

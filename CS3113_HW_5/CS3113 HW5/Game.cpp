@@ -2,31 +2,37 @@
 
 using namespace std;
 
+const int Game::WIDTH = 800;
+const int Game::HEIGHT = 600;
 const float Game::FIXED_TIMESTEP = 0.0166666666f; // 60 fps
 const int Game::MAX_TIMESTEPS = 6;
 const float Game::GRAVITY = 1.0f;
 const float Game::OFFSET = 0.0001f;
-const int Game::TILE_SIZE = 20;
+const int Game::TILE_SIZE = 21;
 const int Game::SPRITE_COUNT_X = 30; // sprites in a row in spritesheet
-const int Game::SPRITE_COUNT_Y = 16; // sprites in a col in spritesheet
+const int Game::SPRITE_COUNT_Y = 30; // sprites in a col in spritesheet
+const int Game::SPRITE_SPACING = 2;
+const int Game::SPRITE_MARGIN = 2;
+const float Game::SCALE = 2.0f;
 
+// origin starts at bottom left
 Game::Game() : displayWindow(nullptr), keyStates(nullptr), done(false), numKeys(0) {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
-	displayWindow = SDL_CreateWindow("My Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_OPENGL);
+	displayWindow = SDL_CreateWindow("My Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_OPENGL);
 	SDL_GLContext context = SDL_GL_CreateContext(displayWindow);
 	SDL_GL_MakeCurrent(displayWindow, context);
 
-	Mix_Init(MIX_INIT_MP3);
-	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096);
+	//Mix_Init(MIX_INIT_MP3);
+	//Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096);
 
-	jumpSound = Mix_LoadWAV("jump.wav");
-	shootSound = Mix_LoadWAV("shoot.wav");
-	music = Mix_LoadMUS("Dreamer.mp3");
+	//jumpSound = Mix_LoadWAV("jump.wav");
+	//shootSound = Mix_LoadWAV("shoot.wav");
+	//music = Mix_LoadMUS("Dreamer.mp3");
 
 	Mix_PlayMusic(music, -1);
 
 	glMatrixMode(GL_VIEWPORT);
-	glViewport(0, 0, 800, 600);
+	glViewport(0, 0, WIDTH, HEIGHT);
 
 	glMatrixMode(GL_PROJECTION);
 	glOrtho(-1.33, 1.33, -1.0, 1.0, -1.0, 1.0);
@@ -37,11 +43,10 @@ Game::Game() : displayWindow(nullptr), keyStates(nullptr), done(false), numKeys(
 	fontSheet = LoadTexture("font.png");
 
 	loadTiledData();
+	loadTileMap();
 
-	SheetSprite sprite(spriteSheet, 441.0f / 692.0f, 25.0f / 692.0f, 17.0f / 692.0f, 21.0f / 692.0f, 1.0f);
+	SheetSprite sprite(spriteSheet, 441.0f / 692.0f, 25.0f / 692.0f, 17.0f / 692.0f, 21.0f / 692.0f, SCALE);
 	player = Player(0.0f, 0.0f, sprite);
-
-	SheetSprite platformSprite(spriteSheet, 25.0f / 692.0f, 94.0f / 692.0f, 21.0f / 692.0f, 21.0f / 692.0f, 1.0f);
 }
 
 Game::~Game() {
@@ -55,12 +60,12 @@ Game::~Game() {
 	}
 	delete levelData;
 
-	Mix_FreeChunk(jumpSound);
-	Mix_FreeChunk(shootSound);
-	Mix_FreeMusic(music);
+	//Mix_FreeChunk(jumpSound);
+	//Mix_FreeChunk(shootSound);
+	//Mix_FreeMusic(music);
 
-	Mix_CloseAudio();
-	Mix_Quit();
+	//Mix_CloseAudio();
+	//Mix_Quit();
 
 	SDL_Quit();
 }
@@ -77,7 +82,7 @@ void Game::update() {
 
 	while (fixedElapsed >= FIXED_TIMESTEP) {
 		fixedElapsed -= FIXED_TIMESTEP;
-		fixedUpdate();
+		//fixedUpdate();
 	}
 	timeLeftOver = fixedElapsed;
 
@@ -110,7 +115,7 @@ void Game::fixedUpdate() {
 	player.y += player.yVel * FIXED_TIMESTEP;
 	for (Entity*& entity : entities) {
 		if (checkRectCollision(&player, entity)) {
-			float penetration = fabs(fabs(player.y - entity->y) - player.getScaledHeight() / 2 - entity->getScaledHeight() / 2) + OFFSET;
+			float penetration = fabs(fabs(player.y - entity->y) - player.getHeight() / 2 - entity->getHeight() / 2) + OFFSET;
 
 			if (player.y < entity->y) {
 				player.y -= penetration;
@@ -132,7 +137,7 @@ void Game::fixedUpdate() {
 	player.x += player.xVel * FIXED_TIMESTEP;
 	for (Entity*& entity : entities) {
 		if (checkRectCollision(&player, entity)) {
-			float penetration = fabs(fabs(player.x - entity->x) - player.getScaledWidth() / 2 - entity->getScaledWidth() / 2) + OFFSET;
+			float penetration = fabs(fabs(player.x - entity->x) - player.getWidth() / 2 - entity->getWidth() / 2) + OFFSET;
 
 			if (player.x < entity->x) {
 				player.x -= penetration;
@@ -175,11 +180,11 @@ void Game::handleEvents() {
 			if (code == SDL_SCANCODE_M) {
 				if (player.collideBottom) {
 					player.yVel = 1.5f;
-					Mix_PlayChannel(-1, jumpSound, 0);
+					//Mix_PlayChannel(-1, jumpSound, 0);
 				}
 			}
 			else if (code == SDL_SCANCODE_N) {
-				Mix_PlayChannel(-1, shootSound, 0);
+				//Mix_PlayChannel(-1, shootSound, 0);
 			}
 		}
 	}
@@ -202,15 +207,15 @@ float Game::calcDistance(Entity& entity1, Entity& entity2) {
 }
 
 bool Game::checkRectCollision(Entity* entity1, Entity* entity2) {
-	float entity1X = entity1->x - entity1->getScaledWidth() / 2;
-	float entity2X = entity2->x - entity2->getScaledWidth() / 2;
-	float entity1Y = entity1->y - entity1->getScaledHeight() / 2;
-	float entity2Y = entity2->y - entity2->getScaledHeight() / 2;
+	float entity1X = entity1->x - entity1->getWidth() / 2;
+	float entity2X = entity2->x - entity2->getWidth() / 2;
+	float entity1Y = entity1->y - entity1->getHeight() / 2;
+	float entity2Y = entity2->y - entity2->getHeight() / 2;
 
-	if (entity1X + entity1->getScaledWidth() < entity2X ||
-		entity2X + entity2->getScaledWidth() < entity1X ||
-		entity1Y + entity1->getScaledHeight() < entity2Y ||
-		entity2Y + entity2->getScaledHeight() < entity1Y) {
+	if (entity1X + entity1->getWidth() < entity2X ||
+		entity2X + entity2->getWidth() < entity1X ||
+		entity1Y + entity1->getHeight() < entity2Y ||
+		entity2Y + entity2->getHeight() < entity1Y) {
 		return false;
 	}
 
@@ -303,52 +308,48 @@ bool Game::readLayerData(ifstream& stream) {
 	return true;
 }
 
-void Game::renderTilemap() {
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, spriteSheet);
+void Game::loadTileMap() {
+	numTiles = 0;
+	float tileSize = (TILE_SIZE / (float) HEIGHT) * SCALE;
 
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-	vector<GLfloat> worldQuads;
-	vector<GLfloat> texQuads;
-
-	int numTiles = 0;
-	float tileSize = (TILE_SIZE / 600.0f) * 2.0f;
+	float spriteWidth = (1.0f - 2 * SPRITE_MARGIN / 692.0f - (SPRITE_COUNT_X - 1) * SPRITE_SPACING / 692.0f) / (float)SPRITE_COUNT_X;
+	float spriteHeight = (1.0f - 2 * SPRITE_MARGIN / 692.0f - (SPRITE_COUNT_Y - 1) * SPRITE_SPACING / 692.0f) / (float)SPRITE_COUNT_Y;
 
 	for (int y = 0; y < mapHeight; y++) {
 		for (int x = 0; x < mapWidth; x++) {
 			if (levelData[y][x] != 0) { // empty tile
 				numTiles++;
 
-				float u = (float)(((int)levelData[y][x]) % SPRITE_COUNT_X) / (float) SPRITE_COUNT_X;
-				float v = (float)(((int) levelData[y][x]) / SPRITE_COUNT_X) / (float) SPRITE_COUNT_Y;
-				float spriteWidth = 1.0f / (float) SPRITE_COUNT_X;
-				float spriteHeight = 1.0f / (float) SPRITE_COUNT_Y;
+				int i = levelData[y][x] % SPRITE_COUNT_X;
+				float u = (i * TILE_SIZE + SPRITE_MARGIN + i * SPRITE_SPACING) / 692.0f;
+				int j = levelData[y][x] / SPRITE_COUNT_X;
+				float v = (j * TILE_SIZE + SPRITE_MARGIN + j * SPRITE_SPACING) / 692.0f;
 
-				/*worldQuads.insert(worldQuads.end(), {
-					TILE_SIZE * x, -TILE_SIZE * y,
-					TILE_SIZE * x, (-TILE_SIZE * y) - TILE_SIZE,
-					(TILE_SIZE * x) + TILE_SIZE, (-TILE_SIZE * y) - TILE_SIZE,
-					(TILE_SIZE * x) + TILE_SIZE, -TILE_SIZE * y
-				});*/
 				float worldU = -1.33f + tileSize * x;
 				float worldV = 1.0f - tileSize * y;
 				worldQuads.insert(worldQuads.end(), {
 					worldU, worldV,
-					worldU + tileSize, worldV,
+					worldU, worldV - tileSize,
 					worldU + tileSize, worldV - tileSize,
-					worldU, worldV - tileSize
+					worldU + tileSize, worldV,
 				});
 				texQuads.insert(texQuads.end(), {
 					u, v,
-					u, v + (spriteHeight),
-					u + spriteWidth, v + (spriteHeight),
+					u, v + spriteHeight,
+					u + spriteWidth, v + spriteHeight,
 					u + spriteWidth, v
 				});
 			}
 		}
 	}
+}
+
+void Game::renderTilemap() {
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, spriteSheet);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 
 	glVertexPointer(2, GL_FLOAT, 0, worldQuads.data());
 	glEnableClientState(GL_VERTEX_ARRAY);
