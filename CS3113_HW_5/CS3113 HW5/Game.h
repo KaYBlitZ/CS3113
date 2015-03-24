@@ -22,14 +22,10 @@ public:
 	static const int MAX_TIMESTEPS;
 	static const float GRAVITY;
 	static const float OFFSET;
-	static const int TILE_SIZE;
-	static const int SPRITE_COUNT_X;
-	static const int SPRITE_COUNT_Y;
-	static const int WIDTH;
-	static const int HEIGHT;
-	static const int SPRITE_MARGIN;
-	static const int SPRITE_SPACING;
-	static const float SCALE;
+	static const int TILE_SIZE_PX;
+	static const int SPRITE_COUNT_X, SPRITE_COUNT_Y;
+	static const int GAME_WIDTH, GAME_HEIGHT, LEVEL_WIDTH, LEVEL_HEIGHT, SPRITE_MARGIN_PX, SPRITE_SPACING_PX;
+	static const float SCALE, TILE_SIZE;
 
 	Game();
 	virtual ~Game();
@@ -42,6 +38,7 @@ private:
 	void handleEvents();
 	float calcDistance(Entity& entity1, Entity& entity2);
 	bool checkRectCollision(Entity* entity1, Entity* entity2);
+	bool checkTilemapCollision(float worldX, float worldY);
 	void removeEntities();
 	float lerp(float v0, float v1, float t);
 	void loadTiledData();
@@ -50,6 +47,7 @@ private:
 	bool readLayerData(std::ifstream& stream);
 	void renderTilemap();
 	void worldToTileCoordinates(float worldX, float worldY, int *gridX, int *gridY);
+	void tileToWorldCoordinates(int gridX, int gridY, float *worldX, float *worldY);
 
 	GLuint LoadTexture(const char *image_path);
 	void drawText(std::string text, float x, float y, float scale);

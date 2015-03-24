@@ -2,23 +2,26 @@
 
 using namespace std;
 
-const int Game::WIDTH = 800;
-const int Game::HEIGHT = 600;
+const int Game::GAME_WIDTH = 800;
+const int Game::GAME_HEIGHT = 600;
 const float Game::FIXED_TIMESTEP = 0.0166666666f; // 60 fps
 const int Game::MAX_TIMESTEPS = 6;
-const float Game::GRAVITY = 1.0f;
+const float Game::GRAVITY = 0.2f;
 const float Game::OFFSET = 0.0001f;
-const int Game::TILE_SIZE = 21;
+const int Game::TILE_SIZE_PX = 21;
 const int Game::SPRITE_COUNT_X = 30; // sprites in a row in spritesheet
 const int Game::SPRITE_COUNT_Y = 30; // sprites in a col in spritesheet
-const int Game::SPRITE_SPACING = 2;
-const int Game::SPRITE_MARGIN = 2;
+const int Game::SPRITE_SPACING_PX = 2;
+const int Game::SPRITE_MARGIN_PX = 2;
+const int Game::LEVEL_WIDTH = 300;
+const int Game::LEVEL_HEIGHT = 28;
 const float Game::SCALE = 2.0f;
+const float Game::TILE_SIZE = (TILE_SIZE_PX / 692.0f) * SCALE;
 
 // origin starts at bottom left
 Game::Game() : displayWindow(nullptr), keyStates(nullptr), done(false), numKeys(0) {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
-	displayWindow = SDL_CreateWindow("My Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_OPENGL);
+	displayWindow = SDL_CreateWindow("My Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, GAME_WIDTH, GAME_HEIGHT, SDL_WINDOW_OPENGL);
 	SDL_GLContext context = SDL_GL_CreateContext(displayWindow);
 	SDL_GL_MakeCurrent(displayWindow, context);
 
@@ -32,12 +35,12 @@ Game::Game() : displayWindow(nullptr), keyStates(nullptr), done(false), numKeys(
 	Mix_PlayMusic(music, -1);
 
 	glMatrixMode(GL_VIEWPORT);
-	glViewport(0, 0, WIDTH, HEIGHT);
+	glViewport(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
 	glMatrixMode(GL_PROJECTION);
 	glOrtho(-1.33, 1.33, -1.0, 1.0, -1.0, 1.0);
 
-	glClearColor(0.5f, 0.3f, 1.0f, 1.0f);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 	spriteSheet = LoadTexture("spritesheet.png");
 	fontSheet = LoadTexture("font.png");
@@ -82,7 +85,7 @@ void Game::update() {
 
 	while (fixedElapsed >= FIXED_TIMESTEP) {
 		fixedElapsed -= FIXED_TIMESTEP;
-		//fixedUpdate();
+		fixedUpdate();
 	}
 	timeLeftOver = fixedElapsed;
 
@@ -113,20 +116,25 @@ void Game::fixedUpdate() {
 	player.yVel -= GRAVITY * FIXED_TIMESTEP;
 
 	player.y += player.yVel * FIXED_TIMESTEP;
-	for (Entity*& entity : entities) {
-		if (checkRectCollision(&player, entity)) {
-			float penetration = fabs(fabs(player.y - entity->y) - player.getHeight() / 2 - entity->getHeight() / 2) + OFFSET;
+	//for (Entity*& entity : entities) {
+	//	if (checkRectCollision(&player, entity)) {
+	//		float penetration = fabs(fabs(player.y - entity->y) - player.getHeight() / 2 - entity->getHeight() / 2) + OFFSET;
 
-			if (player.y < entity->y) {
-				player.y -= penetration;
-				player.collideTop = true;
-			}
-			else {
-				player.y += penetration;
-				player.collideBottom = true;
-			}
-			player.yVel = 0.0f;
-		}
+	//		if (player.y < entity->y) {
+	//			player.y -= penetration;
+	//			player.collideTop = true;
+	//		}
+	//		else {
+	//			player.y += penetration;
+	//			player.collideBottom = true;
+	//		}
+	//		player.yVel = 0.0f;
+	//	}
+	//}
+	
+	float bottomPoint = player.y - player.getHeight() / 2;
+	if (checkTilemapCollision(player.x, bottomPoint)) {
+		player.y += 0.2f;
 	}
 
 	if (player.y < -1.0f) {
@@ -222,6 +230,27 @@ bool Game::checkRectCollision(Entity* entity1, Entity* entity2) {
 	return true;
 }
 
+bool Game::checkTilemapCollision(float worldX, float worldY) {
+	int x, y;
+	worldToTileCoordinates(worldX, worldY, &x, &y);
+
+	//if (levelData[y][x] == 122) {
+	//	return true;
+	//}
+	
+	return false;
+}
+
+void Game::worldToTileCoordinates(float worldX, float worldY, int *gridX, int *gridY) {
+	*gridX = (int)((worldX + TILE_SIZE * LEVEL_WIDTH / 2) / TILE_SIZE);
+	*gridY = (int)((worldY + TILE_SIZE * LEVEL_HEIGHT / 2) / TILE_SIZE);
+}
+
+void Game::tileToWorldCoordinates(int gridX, int gridY, float *worldX, float *worldY) {
+	*worldX = gridX * TILE_SIZE - TILE_SIZE * LEVEL_WIDTH / 2;
+	*worldY = gridY * TILE_SIZE - TILE_SIZE * LEVEL_HEIGHT / 2;
+}
+
 float Game::lerp(float v0, float v1, float t) {
 	return (1.0f - t) * v0 + t * v1;
 }
@@ -310,10 +339,9 @@ bool Game::readLayerData(ifstream& stream) {
 
 void Game::loadTileMap() {
 	numTiles = 0;
-	float tileSize = (TILE_SIZE / (float) HEIGHT) * SCALE;
 
-	float spriteWidth = (1.0f - 2 * SPRITE_MARGIN / 692.0f - (SPRITE_COUNT_X - 1) * SPRITE_SPACING / 692.0f) / (float)SPRITE_COUNT_X;
-	float spriteHeight = (1.0f - 2 * SPRITE_MARGIN / 692.0f - (SPRITE_COUNT_Y - 1) * SPRITE_SPACING / 692.0f) / (float)SPRITE_COUNT_Y;
+	float spriteWidth = (1.0f - 2 * SPRITE_MARGIN_PX / 692.0f - (SPRITE_COUNT_X - 1) * SPRITE_SPACING_PX / 692.0f) / (float)SPRITE_COUNT_X;
+	float spriteHeight = (1.0f - 2 * SPRITE_MARGIN_PX / 692.0f - (SPRITE_COUNT_Y - 1) * SPRITE_SPACING_PX / 692.0f) / (float)SPRITE_COUNT_Y;
 
 	for (int y = 0; y < mapHeight; y++) {
 		for (int x = 0; x < mapWidth; x++) {
@@ -321,18 +349,24 @@ void Game::loadTileMap() {
 				numTiles++;
 
 				int i = levelData[y][x] % SPRITE_COUNT_X;
-				float u = (i * TILE_SIZE + SPRITE_MARGIN + i * SPRITE_SPACING) / 692.0f;
+				float u = (i * TILE_SIZE_PX + SPRITE_MARGIN_PX + i * SPRITE_SPACING_PX) / 692.0f;
 				int j = levelData[y][x] / SPRITE_COUNT_X;
-				float v = (j * TILE_SIZE + SPRITE_MARGIN + j * SPRITE_SPACING) / 692.0f;
+				float v = (j * TILE_SIZE_PX + SPRITE_MARGIN_PX + j * SPRITE_SPACING_PX) / 692.0f;
 
-				float worldU = -1.33f + tileSize * x;
-				float worldV = 1.0f - tileSize * y;
+				//float worldU = -1.33f + tileSize * x;
+				//float worldV = 1.0f - tileSize * y;
 				worldQuads.insert(worldQuads.end(), {
+					TILE_SIZE * x, -TILE_SIZE * y,
+					TILE_SIZE * x, (-TILE_SIZE * y) - TILE_SIZE,
+					(TILE_SIZE * x) + TILE_SIZE, (-TILE_SIZE * y) - TILE_SIZE,
+					(TILE_SIZE * x) + TILE_SIZE, -TILE_SIZE * y
+				});
+				/*worldQuads.insert(worldQuads.end(), {
 					worldU, worldV,
 					worldU, worldV - tileSize,
 					worldU + tileSize, worldV - tileSize,
 					worldU + tileSize, worldV,
-				});
+				});*/
 				texQuads.insert(texQuads.end(), {
 					u, v,
 					u, v + spriteHeight,
@@ -350,6 +384,7 @@ void Game::renderTilemap() {
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+	glTranslatef(-TILE_SIZE * LEVEL_WIDTH / 2, TILE_SIZE * LEVEL_HEIGHT / 2, 0.0f);
 
 	glVertexPointer(2, GL_FLOAT, 0, worldQuads.data());
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -361,11 +396,6 @@ void Game::renderTilemap() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glDrawArrays(GL_QUADS, 0, 4 * numTiles);
-}
-
-void Game::worldToTileCoordinates(float worldX, float worldY, int *gridX, int *gridY) {
-	/**gridX = (int)((worldX + (WORLD_OFFSET_X)) / TILE_SIZE);
-	*gridY = (int)((-worldY + (WORLD_OFFSET_Y)) / TILE_SIZE);*/
 }
 
 bool Game::isDone() { return done; }
