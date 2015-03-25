@@ -16,6 +16,7 @@
 class Entity;
 
 extern const int LEVEL_WIDTH, LEVEL_HEIGHT;
+extern const float HALF_LEVEL_WIDTH, HALF_LEVEL_HEIGHT;
 extern const float TILE_SIZE;
 extern const float SCALE;
 extern const int TILE_SIZE_PX;
@@ -40,7 +41,6 @@ private:
 	void handleEvents();
 	float calcDistance(Entity& entity1, Entity& entity2);
 	bool checkRectCollision(Entity* entity1, Entity* entity2);
-	bool checkTilemapCollision(float worldX, float worldY);
 	void removeEntities();
 	float lerp(float v0, float v1, float t);
 	void loadTiledData();
@@ -49,7 +49,6 @@ private:
 	bool readLayerData(std::ifstream& stream);
 	void renderTilemap();
 	void worldToTileCoordinates(float worldX, float worldY, int *gridX, int *gridY);
-	void tileToWorldCoordinates(int gridX, int gridY, float *worldX, float *worldY);
 
 	GLuint LoadTexture(const char *image_path);
 	void drawText(std::string text, float x, float y, float scale);
@@ -57,7 +56,7 @@ private:
 
 	SDL_Window* displayWindow;
 	GLuint spriteSheet, fontSheet;
-	Mix_Chunk *jumpSound, *shootSound;
+	Mix_Chunk *jumpSound, *respawnSound;
 	Mix_Music *music;
 
 	Player player;
@@ -65,7 +64,7 @@ private:
 	std::vector<GLfloat> worldQuads, texQuads;
 	const Uint8* keyStates;
 	float lastFrameTicks, timeLeftOver;
-	int numKeys, mapWidth, mapHeight, numTiles;
+	int mapWidth, mapHeight, numTiles;
 	int** levelData; // levelData[y][x]
 	bool done;
 };

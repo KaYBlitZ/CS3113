@@ -4,6 +4,7 @@
 
 extern const int LEVEL_WIDTH, LEVEL_HEIGHT;
 extern const float TILE_SIZE;
+extern const float HALF_LEVEL_WIDTH, HALF_LEVEL_HEIGHT;
 
 class SheetSprite {
 public:

@@ -7,33 +7,47 @@ const int LEVEL_HEIGHT = 28;
 const float SCALE = 2.0f;
 const int TILE_SIZE_PX = 21;
 const float TILE_SIZE = TILE_SIZE_PX / 692.0f * SCALE;
+const float HALF_LEVEL_WIDTH = TILE_SIZE * LEVEL_WIDTH / 2;
+const float HALF_LEVEL_HEIGHT = TILE_SIZE * LEVEL_HEIGHT / 2;
 
 const int Game::GAME_WIDTH = 800;
 const int Game::GAME_HEIGHT = 600;
 const float Game::FIXED_TIMESTEP = 0.0166666666f; // 60 fps
 const int Game::MAX_TIMESTEPS = 6;
 const float Game::GRAVITY = 0.2f;
-const float Game::OFFSET = 0.0001f;
+// offset must be small, otherwise multiple fixedUpdates will set a true collision flag to false
+const float Game::OFFSET = 0.00000001f;
 const int Game::SPRITE_COUNT_X = 30; // sprites in a row in spritesheet
 const int Game::SPRITE_COUNT_Y = 30; // sprites in a col in spritesheet
 const int Game::SPRITE_SPACING_PX = 2;
 const int Game::SPRITE_MARGIN_PX = 2;
 
 // origin starts at bottom left
-Game::Game() : displayWindow(nullptr), keyStates(nullptr), done(false), numKeys(0) {
+Game::Game() : displayWindow(nullptr), keyStates(nullptr), done(false), jumpSound(nullptr), respawnSound(nullptr), music(nullptr) {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
-	displayWindow = SDL_CreateWindow("My Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, GAME_WIDTH, GAME_HEIGHT, SDL_WINDOW_OPENGL);
+	displayWindow = SDL_CreateWindow("CS3113 HW 5 - Kenneth Liang", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, GAME_WIDTH, GAME_HEIGHT, SDL_WINDOW_OPENGL);
 	SDL_GLContext context = SDL_GL_CreateContext(displayWindow);
 	SDL_GL_MakeCurrent(displayWindow, context);
 
-	//Mix_Init(MIX_INIT_MP3);
-	//Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096);
+	Mix_Init(MIX_INIT_MP3);
+	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096);
 
-	//jumpSound = Mix_LoadWAV("jump.wav");
-	//shootSound = Mix_LoadWAV("shoot.wav");
-	//music = Mix_LoadMUS("Dreamer.mp3");
+	jumpSound = Mix_LoadWAV("jump.wav");
+	if (jumpSound == nullptr) {
+		fprintf(stderr, "Unable to load jump WAV file: %s\n", Mix_GetError());
+	}
 
-	//Mix_PlayMusic(music, -1);
+	respawnSound = Mix_LoadWAV("respawn.wav");
+	if (respawnSound == nullptr) {
+		fprintf(stderr, "Unable to load land WAV file: %s\n", Mix_GetError());
+	}
+
+	music = Mix_LoadMUS("music.mp3");
+	if (music == nullptr) {
+		fprintf(stderr, "Unable to load MP3 file: %s\n", Mix_GetError());
+	}
+
+	Mix_PlayMusic(music, -1);
 
 	glMatrixMode(GL_VIEWPORT);
 	glViewport(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -41,7 +55,7 @@ Game::Game() : displayWindow(nullptr), keyStates(nullptr), done(false), numKeys(
 	glMatrixMode(GL_PROJECTION);
 	glOrtho(-1.33, 1.33, -1.0, 1.0, -1.0, 1.0);
 
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
 
 	spriteSheet = LoadTexture("spritesheet.png");
 	fontSheet = LoadTexture("font.png");
@@ -50,7 +64,7 @@ Game::Game() : displayWindow(nullptr), keyStates(nullptr), done(false), numKeys(
 	loadTileMap();
 
 	SheetSprite sprite(spriteSheet, 441.0f / 692.0f, 25.0f / 692.0f, 17.0f / 692.0f, 21.0f / 692.0f, SCALE);
-	player = Player(TILE_SIZE * LEVEL_WIDTH / 2, -TILE_SIZE * LEVEL_HEIGHT / 2, sprite);
+	player = Player(HALF_LEVEL_WIDTH, -HALF_LEVEL_HEIGHT, sprite);
 }
 
 Game::~Game() {
@@ -64,12 +78,12 @@ Game::~Game() {
 	}
 	delete levelData;
 
-	//Mix_FreeChunk(jumpSound);
-	//Mix_FreeChunk(shootSound);
-	//Mix_FreeMusic(music);
+	Mix_FreeChunk(jumpSound);
+	Mix_FreeChunk(respawnSound);
+	Mix_FreeMusic(music);
 
-	//Mix_CloseAudio();
-	//Mix_Quit();
+	Mix_CloseAudio();
+	Mix_Quit();
 
 	SDL_Quit();
 }
@@ -104,6 +118,7 @@ void Game::update() {
 	}
 }
 
+// to fix falling down glued to side problem, check more collision points
 void Game::fixedUpdate() {
 	player.collideBottom = false;
 	player.collideLeft = false;
@@ -117,49 +132,61 @@ void Game::fixedUpdate() {
 	player.yVel -= GRAVITY * FIXED_TIMESTEP;
 
 	player.y += player.yVel * FIXED_TIMESTEP;
+
+	float py = player.y - player.getHeight() / 2;
+	if (py < -TILE_SIZE * LEVEL_HEIGHT) {
+		// teleport back to beginning
+		Mix_PlayChannel(-1, respawnSound, 0);
+		player.xVel = 0.0f;
+		player.yVel = 0.0f;
+		player.y = -TILE_SIZE * LEVEL_HEIGHT / 2;
+		player.x = TILE_SIZE * LEVEL_WIDTH / 2;
+	}
+	else if (player.y + player.getHeight() / 2 > 0) {
+		player.x += player.xVel * FIXED_TIMESTEP; // above screen, don't check collision, just add x coords
+		return;
+	}
 	
+	int x1, y1, x2, y2, x3, y3;
+
 	float bottomPoint = player.y - player.getHeight() / 2;
-	int x, y;
-	worldToTileCoordinates(player.x, bottomPoint, &x, &y);
+	worldToTileCoordinates(player.x, bottomPoint, &x1, &y1);
+	worldToTileCoordinates(player.x - 0.90f * player.getWidth() / 2, bottomPoint, &x2, &y2);
+	worldToTileCoordinates(player.x + 0.90f * player.getWidth() / 2, bottomPoint, &x3, &y3);
 
-	if (levelData[y][x] == 122 - 1) {
-		float penetration = fabs(-y * TILE_SIZE - bottomPoint) + OFFSET;
-
-		if (bottomPoint > -y * TILE_SIZE - TILE_SIZE / 2) {
-			player.y += penetration;
-			player.yVel = 0.0f;
-			player.collideBottom = true;
-		}
-		else {
-			player.y -= penetration;
-			player.yVel = 0.0f;
-			player.collideTop = true;
-		}
+	if (levelData[y1][x1] == 123 || levelData[y2][x2] == 123 || levelData[y3][x3] == 123) { // tile 122
+		player.y += fabs(-y1 * TILE_SIZE - bottomPoint) + OFFSET;
+		player.yVel = 0.0f;
+		player.collideBottom = true;
 	}
 
-	if (player.y < TILE_SIZE * -LEVEL_HEIGHT) {
-		player.y = TILE_SIZE * -LEVEL_HEIGHT / 2;
-		player.x = TILE_SIZE * LEVEL_WIDTH / 2;
+	float topPoint = player.y + player.getHeight() / 2;
+	worldToTileCoordinates(player.x, topPoint, &x1, &y1);
+
+	if (levelData[y1][x1]) {
+		player.y -= fabs(-(y1 + 1) * TILE_SIZE - topPoint) + OFFSET;
+		player.yVel = 0.0f;
+		player.collideTop = true;
 	}
 
 	player.x += player.xVel * FIXED_TIMESTEP;
 	
 	float rightPoint = player.x + player.getWidth() / 2;
-	worldToTileCoordinates(rightPoint, player.y, &x, &y);
+	worldToTileCoordinates(rightPoint, player.y, &x1, &y1);
 
-	if (levelData[y][x] == 122 - 1) {
-		float penetration = fabs(x * TILE_SIZE - rightPoint) + OFFSET;
+	if (levelData[y1][x1] == 123) {
+		player.x -= fabs(x1 * TILE_SIZE - rightPoint) + OFFSET;
+		player.xVel = 0.0f;
+		player.collideRight = true;
+	}
 
-		if (rightPoint < x * TILE_SIZE + TILE_SIZE / 2) {
-			player.x -= penetration;
-			player.xVel = 0.0f;
-			player.collideLeft = true;
-		}
-		else {
-			player.x += penetration;
-			player.xVel = 0.0f;
-			player.collideRight = true;
-		}
+	float leftPoint = player.x - player.getWidth() / 2;
+	worldToTileCoordinates(leftPoint, player.y, &x1, &y1);
+	
+	if (levelData[y1][x1] == 123) {
+		player.x += fabs((x1 + 1) * TILE_SIZE  - leftPoint) + OFFSET;
+		player.xVel = 0.0f;
+		player.collideLeft = true;
 	}
 
 	removeEntities();
@@ -168,15 +195,16 @@ void Game::fixedUpdate() {
 void Game::render() {
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glTranslatef(-(player.x - HALF_LEVEL_WIDTH), -(player.y + HALF_LEVEL_HEIGHT), 0.0f);
+
 	renderTilemap();
 
 	for (Entity*& entity : entities) {
 		entity->render();
 	}
 
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glTranslatef(-TILE_SIZE * LEVEL_WIDTH / 2, TILE_SIZE * LEVEL_HEIGHT / 2, 0.0f);
 	player.render();
 
 	SDL_GL_SwapWindow(displayWindow);
@@ -193,12 +221,9 @@ void Game::handleEvents() {
 			SDL_Scancode code = event.key.keysym.scancode;
 			if (code == SDL_SCANCODE_M) {
 				if (player.collideBottom) {
-					player.yVel = 1.5f;
-					//Mix_PlayChannel(-1, jumpSound, 0);
+					player.yVel = 0.4f;
+					Mix_PlayChannel(-1, jumpSound, 0);
 				}
-			}
-			else if (code == SDL_SCANCODE_N) {
-				//Mix_PlayChannel(-1, shootSound, 0);
 			}
 		}
 	}
@@ -236,19 +261,10 @@ bool Game::checkRectCollision(Entity* entity1, Entity* entity2) {
 	return true;
 }
 
-bool Game::checkTilemapCollision(float worldX, float worldY) {
-	return false;
-}
-
-// remember, world coords in in openGL U and V coordinate system, not pixels!
+// remember, world coords are in openGL U and V coordinate system, not pixels!
 void Game::worldToTileCoordinates(float worldX, float worldY, int *gridX, int *gridY) {
 	*gridX = (int)(worldX / TILE_SIZE);
 	*gridY = (int)(-worldY / TILE_SIZE);
-}
-
-void Game::tileToWorldCoordinates(int gridX, int gridY, float *worldX, float *worldY) {
-	*worldX = gridX * TILE_SIZE - TILE_SIZE * LEVEL_WIDTH / 2;
-	*worldY = gridY * TILE_SIZE - TILE_SIZE * LEVEL_HEIGHT / 2;
 }
 
 float Game::lerp(float v0, float v1, float t) {
