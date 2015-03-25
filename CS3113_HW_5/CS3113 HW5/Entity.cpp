@@ -25,9 +25,9 @@ void Entity::render() {
 }
 
 float Entity::getWidth() {
-	return sprite.texWidth;
+	return sprite.texWidth * sprite.scale;
 }
 
 float Entity::getHeight() {
-	return sprite.texHeight;
+	return sprite.texHeight * sprite.scale;
 }

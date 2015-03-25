@@ -24,7 +24,7 @@ void SheetSprite::draw(float x, float y) {
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glTranslatef(x, y, 0.0f);
+	glTranslatef(x - TILE_SIZE * LEVEL_WIDTH / 2, y + TILE_SIZE * LEVEL_HEIGHT / 2, 0.0f);
 
 	float w = texWidth / 2;
 	float h = texHeight / 2;

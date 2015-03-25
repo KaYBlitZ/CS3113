@@ -2,6 +2,9 @@
 
 #include <SDL_opengl.h>
 
+extern const int LEVEL_WIDTH, LEVEL_HEIGHT;
+extern const float TILE_SIZE;
+
 class SheetSprite {
 public:
 	SheetSprite();

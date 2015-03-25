@@ -2,21 +2,22 @@
 
 using namespace std;
 
+const int LEVEL_WIDTH = 300;
+const int LEVEL_HEIGHT = 28;
+const float SCALE = 2.0f;
+const int TILE_SIZE_PX = 21;
+const float TILE_SIZE = TILE_SIZE_PX / 692.0f * SCALE;
+
 const int Game::GAME_WIDTH = 800;
 const int Game::GAME_HEIGHT = 600;
 const float Game::FIXED_TIMESTEP = 0.0166666666f; // 60 fps
 const int Game::MAX_TIMESTEPS = 6;
 const float Game::GRAVITY = 0.2f;
 const float Game::OFFSET = 0.0001f;
-const int Game::TILE_SIZE_PX = 21;
 const int Game::SPRITE_COUNT_X = 30; // sprites in a row in spritesheet
 const int Game::SPRITE_COUNT_Y = 30; // sprites in a col in spritesheet
 const int Game::SPRITE_SPACING_PX = 2;
 const int Game::SPRITE_MARGIN_PX = 2;
-const int Game::LEVEL_WIDTH = 300;
-const int Game::LEVEL_HEIGHT = 28;
-const float Game::SCALE = 2.0f;
-const float Game::TILE_SIZE = (TILE_SIZE_PX / 692.0f) * SCALE;
 
 // origin starts at bottom left
 Game::Game() : displayWindow(nullptr), keyStates(nullptr), done(false), numKeys(0) {
@@ -32,7 +33,7 @@ Game::Game() : displayWindow(nullptr), keyStates(nullptr), done(false), numKeys(
 	//shootSound = Mix_LoadWAV("shoot.wav");
 	//music = Mix_LoadMUS("Dreamer.mp3");
 
-	Mix_PlayMusic(music, -1);
+	//Mix_PlayMusic(music, -1);
 
 	glMatrixMode(GL_VIEWPORT);
 	glViewport(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -49,7 +50,7 @@ Game::Game() : displayWindow(nullptr), keyStates(nullptr), done(false), numKeys(
 	loadTileMap();
 
 	SheetSprite sprite(spriteSheet, 441.0f / 692.0f, 25.0f / 692.0f, 17.0f / 692.0f, 21.0f / 692.0f, SCALE);
-	player = Player(0.0f, 0.0f, sprite);
+	player = Player(TILE_SIZE * LEVEL_WIDTH / 2, -TILE_SIZE * LEVEL_HEIGHT / 2, sprite);
 }
 
 Game::~Game() {
@@ -116,46 +117,48 @@ void Game::fixedUpdate() {
 	player.yVel -= GRAVITY * FIXED_TIMESTEP;
 
 	player.y += player.yVel * FIXED_TIMESTEP;
-	//for (Entity*& entity : entities) {
-	//	if (checkRectCollision(&player, entity)) {
-	//		float penetration = fabs(fabs(player.y - entity->y) - player.getHeight() / 2 - entity->getHeight() / 2) + OFFSET;
-
-	//		if (player.y < entity->y) {
-	//			player.y -= penetration;
-	//			player.collideTop = true;
-	//		}
-	//		else {
-	//			player.y += penetration;
-	//			player.collideBottom = true;
-	//		}
-	//		player.yVel = 0.0f;
-	//	}
-	//}
 	
 	float bottomPoint = player.y - player.getHeight() / 2;
-	if (checkTilemapCollision(player.x, bottomPoint)) {
-		player.y += 0.2f;
+	int x, y;
+	worldToTileCoordinates(player.x, bottomPoint, &x, &y);
+
+	if (levelData[y][x] == 122 - 1) {
+		float penetration = fabs(-y * TILE_SIZE - bottomPoint) + OFFSET;
+
+		if (bottomPoint > -y * TILE_SIZE - TILE_SIZE / 2) {
+			player.y += penetration;
+			player.yVel = 0.0f;
+			player.collideBottom = true;
+		}
+		else {
+			player.y -= penetration;
+			player.yVel = 0.0f;
+			player.collideTop = true;
+		}
 	}
 
-	if (player.y < -1.0f) {
-		player.y = 0.0f;
-		player.x = 0.0f;
+	if (player.y < TILE_SIZE * -LEVEL_HEIGHT) {
+		player.y = TILE_SIZE * -LEVEL_HEIGHT / 2;
+		player.x = TILE_SIZE * LEVEL_WIDTH / 2;
 	}
 
 	player.x += player.xVel * FIXED_TIMESTEP;
-	for (Entity*& entity : entities) {
-		if (checkRectCollision(&player, entity)) {
-			float penetration = fabs(fabs(player.x - entity->x) - player.getWidth() / 2 - entity->getWidth() / 2) + OFFSET;
+	
+	float rightPoint = player.x + player.getWidth() / 2;
+	worldToTileCoordinates(rightPoint, player.y, &x, &y);
 
-			if (player.x < entity->x) {
-				player.x -= penetration;
-				player.collideRight = true;
-			}
-			else {
-				player.x += penetration;
-				player.collideLeft = true;
-			}
+	if (levelData[y][x] == 122 - 1) {
+		float penetration = fabs(x * TILE_SIZE - rightPoint) + OFFSET;
+
+		if (rightPoint < x * TILE_SIZE + TILE_SIZE / 2) {
+			player.x -= penetration;
 			player.xVel = 0.0f;
+			player.collideLeft = true;
+		}
+		else {
+			player.x += penetration;
+			player.xVel = 0.0f;
+			player.collideRight = true;
 		}
 	}
 
@@ -171,6 +174,9 @@ void Game::render() {
 		entity->render();
 	}
 
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(-TILE_SIZE * LEVEL_WIDTH / 2, TILE_SIZE * LEVEL_HEIGHT / 2, 0.0f);
 	player.render();
 
 	SDL_GL_SwapWindow(displayWindow);
@@ -231,19 +237,13 @@ bool Game::checkRectCollision(Entity* entity1, Entity* entity2) {
 }
 
 bool Game::checkTilemapCollision(float worldX, float worldY) {
-	int x, y;
-	worldToTileCoordinates(worldX, worldY, &x, &y);
-
-	//if (levelData[y][x] == 122) {
-	//	return true;
-	//}
-	
 	return false;
 }
 
+// remember, world coords in in openGL U and V coordinate system, not pixels!
 void Game::worldToTileCoordinates(float worldX, float worldY, int *gridX, int *gridY) {
-	*gridX = (int)((worldX + TILE_SIZE * LEVEL_WIDTH / 2) / TILE_SIZE);
-	*gridY = (int)((worldY + TILE_SIZE * LEVEL_HEIGHT / 2) / TILE_SIZE);
+	*gridX = (int)(worldX / TILE_SIZE);
+	*gridY = (int)(-worldY / TILE_SIZE);
 }
 
 void Game::tileToWorldCoordinates(int gridX, int gridY, float *worldX, float *worldY) {
@@ -322,7 +322,7 @@ bool Game::readLayerData(ifstream& stream) {
 				string tile;
 				for (int x = 0; x < mapWidth; x++) {
 					getline(lineStream, tile, ',');
-					unsigned char val = (unsigned char) atoi(tile.c_str());
+					int val = (int) atoi(tile.c_str());
 					if (val > 0) {
 						// be careful, tiles start from index 1
 						levelData[y][x] = val - 1;

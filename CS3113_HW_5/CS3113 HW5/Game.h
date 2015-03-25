@@ -12,9 +12,13 @@
 #include <math.h>
 #include "Entity.h"
 #include "Player.h"
-#include "Platform.h"
 
 class Entity;
+
+extern const int LEVEL_WIDTH, LEVEL_HEIGHT;
+extern const float TILE_SIZE;
+extern const float SCALE;
+extern const int TILE_SIZE_PX;
 
 class Game {
 public:
@@ -22,10 +26,8 @@ public:
 	static const int MAX_TIMESTEPS;
 	static const float GRAVITY;
 	static const float OFFSET;
-	static const int TILE_SIZE_PX;
 	static const int SPRITE_COUNT_X, SPRITE_COUNT_Y;
-	static const int GAME_WIDTH, GAME_HEIGHT, LEVEL_WIDTH, LEVEL_HEIGHT, SPRITE_MARGIN_PX, SPRITE_SPACING_PX;
-	static const float SCALE, TILE_SIZE;
+	static const int GAME_WIDTH, GAME_HEIGHT, SPRITE_MARGIN_PX, SPRITE_SPACING_PX;
 
 	Game();
 	virtual ~Game();
