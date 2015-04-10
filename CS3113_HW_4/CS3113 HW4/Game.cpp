@@ -2,7 +2,7 @@
 
 using namespace std;
 
-const float Game::FIXED_TIMESTEP = 0.0166666666f; // 60 fps
+const float Game::FIXED_TIMESTEP = 1 / 60.0f; // 60 fps
 const int Game::MAX_TIMESTEPS = 6;
 const float Game::GRAVITY = 1.0f;
 const float Game::OFFSET = 0.0001f;
@@ -77,7 +77,7 @@ void Game::update() {
 	lastFrameTicks = ticks;
 
 	float fixedElapsed = elapsed + timeLeftOver;
-	if (fixedElapsed > FIXED_TIMESTEP) {
+	if (fixedElapsed > FIXED_TIMESTEP * MAX_TIMESTEPS) {
 		fixedElapsed = FIXED_TIMESTEP * MAX_TIMESTEPS;
 	}
 
@@ -191,7 +191,7 @@ void Game::handleEvents() {
 		else if (event.type == SDL_KEYDOWN) {
 			SDL_Scancode code = event.key.keysym.scancode;
 			if (code == SDL_SCANCODE_M) {
-				if (player.collideBottom) player.yVel = 1.5f;
+				if (player.collideBottom) player.yVel = 1.25f;
 			}
 		}
 	}

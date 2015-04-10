@@ -14,7 +14,7 @@ const int Game::GAME_WIDTH = 800;
 const int Game::GAME_HEIGHT = 600;
 const float Game::FIXED_TIMESTEP = 0.0166666666f; // 60 fps
 const int Game::MAX_TIMESTEPS = 6;
-const float Game::GRAVITY = 0.2f;
+const float Game::GRAVITY = 0.6f;
 // offset must be small, otherwise multiple fixedUpdates will set a true collision flag to false
 const float Game::OFFSET = 0.00000001f;
 const int Game::SPRITE_COUNT_X = 30; // sprites in a row in spritesheet
@@ -94,7 +94,7 @@ void Game::update() {
 	lastFrameTicks = ticks;
 
 	float fixedElapsed = elapsed + timeLeftOver;
-	if (fixedElapsed > FIXED_TIMESTEP) {
+	if (fixedElapsed > FIXED_TIMESTEP * MAX_TIMESTEPS) {
 		fixedElapsed = FIXED_TIMESTEP * MAX_TIMESTEPS;
 	}
 
@@ -221,7 +221,7 @@ void Game::handleEvents() {
 			SDL_Scancode code = event.key.keysym.scancode;
 			if (code == SDL_SCANCODE_M) {
 				if (player.collideBottom) {
-					player.yVel = 0.4f;
+					player.yVel = 0.7f;
 					Mix_PlayChannel(-1, jumpSound, 0);
 				}
 			}

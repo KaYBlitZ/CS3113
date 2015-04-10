@@ -274,7 +274,7 @@ void SpaceInvaderGame::checkCollsions() {
 void SpaceInvaderGame::removeEntities() {
 	vector<Bullet>::iterator itr = bullets.begin();
 	while (itr != bullets.end()) {
-		if ((*itr).canRemove()) {
+		if (itr->canRemove()) {
 			itr = bullets.erase(itr);
 		}
 		else {
@@ -283,7 +283,7 @@ void SpaceInvaderGame::removeEntities() {
 	}
 	vector<Enemy>::iterator itr2 = enemies.begin();
 	while (itr2 != enemies.end()) {
-		if ((*itr2).canRemove()) {
+		if (itr2->canRemove()) {
 			itr2 = enemies.erase(itr2);
 		}
 		else {
