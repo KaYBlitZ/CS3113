@@ -7,5 +7,5 @@
 
 # Controls
 Press Z and X to rotate left and right  
-Press N to enable thrusters
+Press N to enable thrusters  
 Press M to shoot missiles
