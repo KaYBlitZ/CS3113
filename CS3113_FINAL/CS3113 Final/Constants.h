@@ -9,8 +9,8 @@ namespace Constants {
 
 	const float ENEMY_DETECTION_RADIUS = 10.0f;
 
-	const int GAME_WIDTH = 800;
-	const int GAME_HEIGHT = 600;
+	const int GAME_WIDTH =1280;
+	const int GAME_HEIGHT = 960;
 	const float FIXED_TIMESTEP = 1 / 60.0f; // 60 fps
 	const int MAX_TIMESTEPS = 6;
 
