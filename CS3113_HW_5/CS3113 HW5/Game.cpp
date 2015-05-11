@@ -125,16 +125,13 @@ void Game::fixedUpdate() {
 	player.collideRight = false;
 	player.collideTop = false;
 
-	player.xVel = lerp(player.xVel, 0.0f, FIXED_TIMESTEP * Player::PLAYER_FRIC_X);
-	player.yVel = lerp(player.yVel, 0.0f, FIXED_TIMESTEP * Player::PLAYER_FRIC_Y);
+	player.xVel = lerp(player.xVel, 0.0f, Player::PLAYER_FRIC_X);
 
 	player.xVel += player.xAccel * FIXED_TIMESTEP;
 	player.yVel -= GRAVITY * FIXED_TIMESTEP;
 
-	player.y += player.yVel * FIXED_TIMESTEP;
-
 	float py = player.y - player.getHeight() / 2;
-	if (py < -TILE_SIZE * LEVEL_HEIGHT) {
+	if (py < -TILE_SIZE * LEVEL_HEIGHT + 0.1f) {
 		// teleport back to beginning
 		Mix_PlayChannel(-1, respawnSound, 0);
 		player.xVel = 0.0f;
@@ -143,27 +140,30 @@ void Game::fixedUpdate() {
 		player.x = TILE_SIZE * LEVEL_WIDTH / 2;
 	}
 	else if (player.y + player.getHeight() / 2 > 0) {
-		player.x += player.xVel * FIXED_TIMESTEP; // above screen, don't check collision, just add x coords
+		player.x += player.xVel * FIXED_TIMESTEP; // above screen, don't check collision
+		player.y += player.yVel * FIXED_TIMESTEP;
 		return;
 	}
 	
-	int x1, y1, x2, y2, x3, y3;
+	int x1, y1, x2, y2;
+
+	player.y += player.yVel * FIXED_TIMESTEP;
 
 	float bottomPoint = player.y - player.getHeight() / 2;
-	worldToTileCoordinates(player.x, bottomPoint, &x1, &y1);
-	worldToTileCoordinates(player.x - 0.90f * player.getWidth() / 2, bottomPoint, &x2, &y2);
-	worldToTileCoordinates(player.x + 0.90f * player.getWidth() / 2, bottomPoint, &x3, &y3);
+	worldToTileCoordinates(player.x - 0.95f * player.getWidth() / 2, bottomPoint, &x1, &y1);
+	worldToTileCoordinates(player.x + 0.95f * player.getWidth() / 2, bottomPoint, &x2, &y2);
 
-	if (levelData[y1][x1] == 123 || levelData[y2][x2] == 123 || levelData[y3][x3] == 123) { // tile 122
+	if (levelData[y1][x1] == 123 || levelData[y2][x2] == 123) { // tile 122
 		player.y += fabs(-y1 * TILE_SIZE - bottomPoint) + OFFSET;
 		player.yVel = 0.0f;
 		player.collideBottom = true;
 	}
 
 	float topPoint = player.y + player.getHeight() / 2;
-	worldToTileCoordinates(player.x, topPoint, &x1, &y1);
+	worldToTileCoordinates(player.x - 0.95f * player.getWidth() / 2, topPoint, &x1, &y1);
+	worldToTileCoordinates(player.x + 0.95f * player.getWidth() / 2, topPoint, &x2, &y2);
 
-	if (levelData[y1][x1]) {
+	if (levelData[y1][x1] || levelData[y1][x2]) {
 		player.y -= fabs(-(y1 + 1) * TILE_SIZE - topPoint) + OFFSET;
 		player.yVel = 0.0f;
 		player.collideTop = true;
@@ -172,18 +172,20 @@ void Game::fixedUpdate() {
 	player.x += player.xVel * FIXED_TIMESTEP;
 	
 	float rightPoint = player.x + player.getWidth() / 2;
-	worldToTileCoordinates(rightPoint, player.y, &x1, &y1);
+	worldToTileCoordinates(rightPoint, player.y + 0.95f * player.getHeight() / 2, &x1, &y1);
+	worldToTileCoordinates(rightPoint, player.y - 0.95f * player.getHeight() / 2, &x2, &y2);
 
-	if (levelData[y1][x1] == 123) {
+	if (levelData[y1][x1] == 123 || levelData[y2][x2]) {
 		player.x -= fabs(x1 * TILE_SIZE - rightPoint) + OFFSET;
 		player.xVel = 0.0f;
 		player.collideRight = true;
 	}
 
 	float leftPoint = player.x - player.getWidth() / 2;
-	worldToTileCoordinates(leftPoint, player.y, &x1, &y1);
-	
-	if (levelData[y1][x1] == 123) {
+	worldToTileCoordinates(leftPoint, player.y + 0.95f * player.getHeight() / 2, &x1, &y1);
+	worldToTileCoordinates(leftPoint, player.y - 0.95f * player.getHeight() / 2, &x2, &y2);
+
+	if (levelData[y1][x1] == 123 || levelData[y2][x2]) {
 		player.x += fabs((x1 + 1) * TILE_SIZE  - leftPoint) + OFFSET;
 		player.xVel = 0.0f;
 		player.collideLeft = true;

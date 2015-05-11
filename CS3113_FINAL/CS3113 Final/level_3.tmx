@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="50" height="60" tilewidth="512" tileheight="512" nextobjectid="39">
+ <tileset firstgid="1" name="grass" tilewidth="512" tileheight="512">
+  <image source="C:/Users/Kenneth/Desktop/grass.jpg" width="512" height="512"/>
+ </tileset>
+ <layer name="Tile Layer 1" width="50" height="60">
+  <data encoding="base64" compression="zlib">
+   eJzt00EOgCAMBVG8/6WNWxdNCx/b4kzCjhRe0DGIyNtlrE5Zjk7GUxxPs5aMNWuq5lwp++47HMq8c6s7vj4fhybr/Ir/IQ4cOHo6FNaqjuh74sARuYN3Dw4cnjNw9HGsfLc4cKjCEXv391nqcODAgWOXQz0fx38dK+Ho5bD2K+apwqGZpwqHZp4qHL55WetEx4w5+/44iKhrN8IeBVM=
+  </data>
+ </layer>
+ <objectgroup name="Spawn">
+  <object id="1" x="1024" y="27648" width="512" height="512">
+   <ellipse/>
+  </object>
+ </objectgroup>
+ <objectgroup name="Goal">
+  <object id="2" x="2560" y="2560" width="512" height="512">
+   <ellipse/>
+  </object>
+ </objectgroup>
+ <objectgroup name="Flowers">
+  <object id="3" x="2560" y="8704" width="512" height="512"/>
+  <object id="4" x="8704" y="12288" width="512" height="512"/>
+  <object id="5" x="4096" y="19456" width="512" height="512"/>
+  <object id="6" x="2560" y="14336" width="512" height="512"/>
+  <object id="7" x="9216" y="20480" width="512" height="512"/>
+  <object id="8" x="9216" y="27136" width="512" height="512"/>
+  <object id="9" x="23552" y="20480" width="512" height="512"/>
+  <object id="10" x="14848" y="15360" width="512" height="512"/>
+  <object id="11" x="18432" y="4096" width="512" height="512"/>
+  <object id="12" x="7680" y="3072" width="512" height="512"/>
+ </objectgroup>
+ <objectgroup name="Trees">
+  <object id="13" x="7680" y="8704" width="512" height="512"/>
+  <object id="14" x="10752" y="17408" width="512" height="512"/>
+  <object id="15" x="21504" y="27136" width="512" height="512"/>
+  <object id="16" x="14848" y="10240" width="512" height="512"/>
+  <object id="17" x="4672" y="3712" width="512" height="512"/>
+ </objectgroup>
+ <objectgroup name="Enemies">
+  <object id="18" x="2048" y="22016" width="512" height="512"/>
+  <object id="19" x="11264" y="16896" width="512" height="512"/>
+  <object id="20" x="14848" y="9728" width="512" height="512"/>
+  <object id="21" x="3584" y="12800" width="512" height="512"/>
+  <object id="22" x="10240" y="22016" width="512" height="512"/>
+  <object id="23" x="10240" y="21504" width="512" height="512"/>
+  <object id="24" x="10240" y="20992" width="512" height="512"/>
+  <object id="25" x="9216" y="8192" width="512" height="512"/>
+  <object id="26" x="4608" y="9216" width="512" height="512"/>
+  <object id="27" x="7680" y="27136" width="512" height="512"/>
+  <object id="28" x="21504" y="20992" width="512" height="512"/>
+  <object id="30" x="20992" y="20480" width="512" height="512"/>
+  <object id="31" x="23552" y="11776" width="512" height="512"/>
+  <object id="32" x="22016" y="14848" width="512" height="512"/>
+  <object id="33" x="5120" y="2048" width="512" height="512"/>
+  <object id="35" x="5120" y="2560" width="512" height="512"/>
+  <object id="36" x="5120" y="3072" width="512" height="512"/>
+  <object id="38" x="5632" y="3584" width="512" height="512"/>
+ </objectgroup>
+</map>

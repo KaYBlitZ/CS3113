@@ -54,9 +54,9 @@ Matrix Matrix::operator * (const Matrix &m2) {
 
 Vector Matrix::operator * (const Vector &v2) {
 	Vector vector;
-	vector.x = ml[0] * v2.x + ml[1] * v2.y + ml[2] * v2.z;
-	vector.y = ml[4] * v2.x + ml[5] * v2.y + ml[6] * v2.z;
-	vector.z = ml[8] * v2.x + ml[9] * v2.y + ml[10] * v2.z;
+	vector.x = ml[0] * v2.x + ml[1] * v2.y + ml[2] * v2.z + ml[12] * v2.t;
+	vector.y = ml[4] * v2.x + ml[5] * v2.y + ml[6] * v2.z + ml[13] * v2.t;
+	vector.z = ml[8] * v2.x + ml[9] * v2.y + ml[10] * v2.z + ml[14] * v2.t;
 
 	return vector;
 }

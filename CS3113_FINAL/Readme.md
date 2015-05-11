@@ -7,5 +7,8 @@
 - Must have at least some animation or particle effects
 
 # Controls
-Press Z and X to rotate left and right  
-Press N to enable thrusters
+Press Esc to exit the game at any time  
+Press WASD to move  
+Press Q and E to rotate  
+Press Left Control to crouch
+Use mouse to look and left click to shoot

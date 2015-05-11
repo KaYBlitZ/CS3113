@@ -1,33 +1,53 @@
 #include "Entity.h"
 
-Entity::Entity() : x(0.0f), y(0.0f), scaleX(0.0f), scaleY(0.0f), rotation(0.0f), remove(false) {}
-Entity::Entity(float x, float y) : x(x), y(y), scaleX(1.0f), scaleY(1.0f), rotation(0.0f), remove(false) {}
-Entity::Entity(const Entity& rhs) : matrix(rhs.matrix), x(rhs.x), y(rhs.y), scaleX(rhs.scaleX), scaleY(rhs.scaleY), rotation(rhs.rotation), remove(false) {}
+Entity::Entity() : scale(1.0f, 1.0f, 1.0f, 1.0f), isBillboard(false), remove(false) {}
+
+Entity::Entity(float x, float y, float z) : Entity(x, y, z, false) {}
+
+Entity::Entity(float x, float y, float z, bool isBillboard) : position(x, y, z, 1.0f), scale(1.0f, 1.0f, 1.0f, 1.0f), isBillboard(isBillboard), remove(false) {}
+
+Entity::Entity(const Entity& rhs) : matrix(rhs.matrix), position(rhs.position), scale(rhs.scale), rotation(rhs.rotation), isBillboard(rhs.isBillboard), remove(rhs.remove) {}
 
 Entity& Entity::operator=(const Entity& rhs) {
 	if (&rhs != this) {
 		// matrix recreated every render
-		x = rhs.x;
-		y = rhs.y;
-		scaleX = rhs.scaleX;
-		scaleY = rhs.scaleY;
+		position = rhs.position;
+		scale = rhs.scale;
 		rotation = rhs.rotation;
+		isBillboard = rhs.isBillboard;
 		remove = rhs.remove;
 	}
+
 	return *this;
 }
 
-void Entity::createMatrix() {
-	Matrix translate, rotate, scale;
+void Entity::buildMatrix() {
+	Matrix rotateX, rotateY, rotateZ, scaleMat;
 
-	translate.ml[12] = x;
-	translate.ml[13] = y;
-	rotate.ml[0] = cos(rotation * Constants::DEG_TO_RAD);
-	rotate.ml[4] = -sin(rotation * Constants::DEG_TO_RAD);
-	rotate.ml[1] = sin(rotation * Constants::DEG_TO_RAD);
-	rotate.ml[5] = cos(rotation * Constants::DEG_TO_RAD);
-	scale.ml[0] = scaleX;
-	scale.ml[5] = scaleY;
+	matrix.identity();
 
-	matrix = scale * rotate * translate;
+	matrix.ml[12] = position.x;
+	matrix.ml[13] = position.y;
+	matrix.ml[14] = position.z;
+
+	rotateX.m[1][1] = cosf(rotation.x);
+	rotateX.m[1][2] = sinf(rotation.x);
+	rotateX.m[2][1] = -sinf(rotation.x);
+	rotateX.m[2][2] = cosf(rotation.x);
+
+	rotateY.m[0][0] = cosf(rotation.y);
+	rotateY.m[2][0] = -sinf(rotation.y);
+	rotateY.m[0][2] = sinf(rotation.y);
+	rotateY.m[2][2] = cosf(rotation.y);
+
+	rotateZ.m[0][0] = cosf(rotation.z);
+	rotateZ.m[0][1] = -sinf(rotation.z);
+	rotateZ.m[1][0] = sinf(rotation.z);
+	rotateZ.m[1][1] = cosf(rotation.z);
+
+	scaleMat.m[0][0] = scale.x;
+	scaleMat.m[1][1] = scale.y;
+	scaleMat.m[2][2] = scale.z;
+
+	matrix = scaleMat * (rotateX * rotateY * rotateZ) * matrix;
 }

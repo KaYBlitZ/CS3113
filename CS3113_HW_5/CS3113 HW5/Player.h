@@ -4,7 +4,7 @@
 
 class Player : public Entity {
 public:
-	static const float PLAYER_FRIC_X, PLAYER_FRIC_Y, X_ACCEL;
+	static const float PLAYER_FRIC_X, X_ACCEL;
 	bool collideLeft, collideTop, collideRight, collideBottom;
 
 	Player();
