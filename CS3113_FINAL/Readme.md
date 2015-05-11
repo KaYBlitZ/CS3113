@@ -10,5 +10,5 @@
 Press Esc to exit the game at any time  
 Press WASD to move  
 Press Q and E to rotate  
-Press Left Control to crouch
+Press Left Control to crouch  
 Use mouse to look and left click to shoot
